@@ -88,8 +88,9 @@ angular.module('dashboard.Dashboard.Model.Edit', [
     }
 
     $scope.$on('saveModel', function() { $scope.clickSaveModel($scope.data); });
-    $scope.$on('deleteModel', function() { $scope.clickDeleteModel($scope.data); })
-  }
+    $scope.$on('deleteModel', function(event, formParams) {
+      $scope.clickDeleteModel($scope.data, formParams);
+    });
 
   function layoutModelDisplay() {
     //Check if $scope.model.display is defined displaying the order of fields defined in the loopback model json
@@ -169,7 +170,8 @@ angular.module('dashboard.Dashboard.Model.Edit', [
     });
   };
   
-  $scope.clickDeleteModel = function(data) {
+  $scope.clickDeleteModel = function(data, formParams) {
+    $scope.deleteDialogText = (formParams && formParams.deleteDialogText) ? formParams.deleteDialogText : $scope.deleteDialogText;
     if (!confirm($scope.deleteDialogText)) return;
     var id = data[$scope.action.options.key];
     if ($scope.model.options && $scope.model.options.softDeleteProperty) {
@@ -183,6 +185,7 @@ angular.module('dashboard.Dashboard.Model.Edit', [
       //Hard Delete
       GeneralModelService.remove($scope.model.plural, id)
       .then(function(response) {
+        $rootScope.$broadcast('modelDeleted');
         CacheService.clear($scope.action.options.model);
         $window.history.back();
       }, function(error) {
